@@ -1,0 +1,6 @@
+{
+  "accuracy": 0.8983788110406183,
+  "weighted_f1": 0.8990511949366166,
+  "num_samples_test": 152419,
+  "best_iteration": 500
+}
