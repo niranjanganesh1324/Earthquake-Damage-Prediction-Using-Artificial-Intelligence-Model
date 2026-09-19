@@ -1,0 +1,342 @@
+      Earthquake Damage Prediction Using
+          Artificial Intelligence Model
+
+Authors: Shrinivas Vijay(23BBS0082) , VIT Vellore, India Rana Rejin(23BBS0188), VIT
+Vellore, India Maanas Chowdhary(23BBS0062), VIT Vellore , India
+
+
+
+
+Abstract
+
+
+Earthquakes are a natural disaster that causes damage to personnel and property.
+While personnel protection and safety is a well planned response, so can
+property safety be. This paper presents a LightGBM based machine learning
+classification model that predicts building damage grades using key features
+such as floor count, age, plinth area, roof type, and earthquake intensity
+measures for the Country of Nepal.
+
+
+Based on the predicted Earthquake Damage grade for a building, measures can
+be taken to either structurally improve it or the model can be used to predict the
+damage that would be taken by a building project that is yet to be developed,
+thereby giving an approximate view in to the future, so that the design can be
+perfected for Earthquake dense areas.
+
+
+This model is based on the Nepal 2015 Earthquake Data of the buildings and
+areas, but can be extended to any Earthquake prone country if the relevant data
+is collected and given to the model for training.
+The model achieves 90.37% overall accuracy and a weighted F1 score of 0.904,
+performing well across all damage grades. A user friendly GUI allows real time
+predictions, offering actionable insights for engineers, planners, and emergency
+responders, enabling faster and more informed post earthquake decision
+making.
+Keywords
+Earthquake, Damage Prediction, Machine Learning, LightGBM, Risk
+Assessment, Nepal Earthquake prediction
+
+
+
+
+Introduction
+
+
+Earthquakes cause severe damage to buildings, posing risks to life and
+infrastructure. Rapid damage assessment is critical for effective disaster
+response but manual inspections are slow and error prone.
+
+
+Machine learning offers a faster, automated approach by predicting building
+damage from structural and site-specific features. This study presents a
+LightGBM based model trained on Nepal earthquake data, using 13 key features
+and derived metrics.
+
+
+
+
+The model achieves high accuracy and F1 scores across damage grades.
+
+
+ Damage       Inference
+ Grade
+ 0            No damage Building remains fully functional, minor cosmetic issues at
+              most.
+ 1            Minor damage Slight structural or non-structural damage, safe for
+              occupancy with minimal repairs.
+ 2            Moderate damage Visible cracks, partial structural damage, may require
+              careful inspection before use.
+ 3            Extensive damage Significant structural damage, unsafe for occupancy
+              without major repairs.
+ 4            Complete damage Building is collapsed or nearly collapsed, unsafe and
+              likely irreparable.
+Related Work
+
+
+Earthquake damage prediction has traditionally relied on post event surveys,
+which are slow and error prone. Recent studies use machine learning models
+like Random Forests, XGBoost, and LightGBM with structural, geographical,
+and seismic features, achieving faster and more accurate assessments.
+
+
+This work extends prior research by incorporating derived metrics such as
+intensity ratios and floor heights and providing a real time prediction interface
+for practical disaster management.
+
+
+
+
+Methodology
+
+
+The proposed system predicts building damage grades (0-4) using a LightGBM
+model trained on Nepal earthquake ward-level data.
+
+
+
+
+SAMPLE SNAPSHOTS from Dataset:
+
+
+csv_building_structure.csv
+mun_level_pred_intensity.csv
+
+
+
+
+ward_level_pred_intensity.csv
+
+
+
+
+ward_vdcmun_district_name_mapping.csv
+
+
+
+
+Thirteen key building and site-specific features including floor count, age,
+plinth area, roof type, and seismic intensity are used.
+
+
+Derived features such as intensity ratio, height estimations, and ward-level
+damage mean are added to improve predictive performance.
+Feature Variable         Type          Meaning
+
+                                       Code for the district where the
+district_id_x            int
+                                       building is located.
+
+vdcmun_id_x              int           Code for the municipality or village.
+
+                                       Ward number within the
+ward_id                  int
+                                       district/municipality.
+
+                                       Number of floors the building had
+count_floors_pre_eq      int
+                                       before the earthquake.
+
+                                       Number of floors remaining after
+count_floors_post_eq     int
+                                       the earthquake (if known).
+
+age_building             int           Age of the building in years.
+
+                                       Total floor area of the building in
+plinth_area_sq_ft        float
+                                       square feet.
+
+                                       Estimated building height before the
+height_ft_pre_eq         float
+                                       earthquake.
+
+                                       Estimated building height after the
+height_ft_post_eq        float
+                                       earthquake.
+
+                                       Slope of the land: flat, moderate, or
+land_surface_condition   categorical
+                                       steep.
+
+                                       Material used for the building’s
+foundation_type          categorical
+                                       foundation.
+
+                                       Type of roof: thatched, concrete, or
+roof_type                categorical
+                                       metal.
+
+                                       Material of the ground floor: mud,
+ground_floor_type        categorical
+                                       cement, timber, tile, or other.
+
+                                       Flag for any other floor type not
+other_floor_type         int
+                                       listed above.
+Feature Variable           Type          Meaning
+
+                                         Whether the building is detached,
+position                   categorical   semi-detached, next to others, or at
+                                         a corner.
+
+                                         Shape or layout of the building
+plan_configuration         categorical
+                                         (coded 0-9).
+
+has_superstructure_adobe_                1 if walls are made of mud
+                          binary
+mud                                      bricks/adobe, else 0.
+
+has_superstructure_mud_m                 1 if stone walls held with mud
+                         binary
+ortar_stone                              mortar, else 0.
+
+has_superstructure_stone_fl
+                            binary       1 if stone slab walls, else 0.
+ag
+
+has_superstructure_cement                1 if stone walls held with cement,
+                          binary
+_mortar_stone                            else 0.
+
+has_superstructure_mud_m                 1 if brick walls with mud mortar,
+                         binary
+ortar_brick                              else 0.
+
+has_superstructure_cement
+                          binary         1 if brick walls with cement, else 0.
+_mortar_brick
+
+has_superstructure_timber binary         1 if wooden walls or frames, else 0.
+
+has_superstructure_bamboo binary         1 if bamboo structures, else 0.
+
+has_superstructure_rc_non_               1 if reinforced concrete without
+                           binary
+engineered                               engineering standards, else 0.
+
+has_superstructure_rc_engi               1 if properly engineered reinforced
+                           binary
+neered                                   concrete, else 0.
+
+                                         1 if any other type of wall material,
+has_superstructure_other   binary
+                                         else 0.
+
+                                         1 if the building’s condition after the
+condition_post_eq          binary
+                                         earthquake is noted, else 0.
+Feature Variable              Type           Meaning
+
+technical_solution_propose                   1 if repair/reinforcement is
+                           binary
+d                                            suggested, else 0.
+
+                                             Municipality code derived from
+vdcmun_id_y                   int
+                                             ward info.
+
+vdcmun_name                   int            Encoded name of the municipality.
+
+                                             District code derived from ward
+district_id_y                 int
+                                             info.
+
+district_name                 int            Encoded name of the district.
+
+                                             Predicted earthquake strength at the
+pred_intensity                float
+                                             building’s location.
+
+                                             Average predicted intensity for the
+pred_intensity_mun            float
+                                             municipality.
+
+                                             How strong the earthquake was at
+intensity_ratio               float          this building compared to the
+                                             municipality average.
+
+                                             Overall average earthquake
+avg_intensity                 float
+                                             intensity.
+
+                                             Historical average damage in this
+ward_damage_mean              float
+                                             ward.
+
+
+
+
+The dataset is processed with label encoding for categorical variables and
+missing value imputation.
+
+
+The model is trained with an 80/20 train-test split.
+A graphical user interface (GUI) allows users to input feature values and obtain
+real-time damage grade predictions, making the system practical for engineers
+and disaster responders.
+
+
+
+
+Results and Discussion
+
+
+The LightGBM model achieved an overall accuracy of 90.37% on the test set.
+Detailed evaluation using precision, recall, and F1 score demonstrates strong
+performance across all damage grades:
+Summary;
+  •   Grade 0 (No damage): F1-score 0.9390
+  •   Grade 1 (Minor damage): F1-score 0.8362
+  •   Grade 2 (Moderate damage): F1-score 0.8075
+  •   Grade 3 (Extensive damage): F1-score 0.8815
+  •   Grade 4 (Complete damage): F1-score 0.9792
+The weighted F1 score of 0.9044 indicates the model’s robustness in handling
+class imbalance.
+Incorporating derived features such as intensity ratios, floor height estimations,
+and ward level damage means improved predictive performance, especially for
+moderate and extensive damage grades.
+The GUI tool allows for real time damage assessment, enabling engineers,
+urban planners, and emergency responders to quickly evaluate structural
+vulnerability
+
+
+
+
+.
+Compared to traditional post event surveys, the system offers faster, automated,
+and consistent predictions, facilitating informed decision-making and
+potentially reducing human and economic losses in post-earthquake scenarios.
+
+
+
+
+Conclusion
+
+
+This study presents a machine learning-based system for rapid earthquake
+damage assessment of buildings. Using a LightGBM model trained on Nepal
+ward-level data, the system predicts damage grades (0-4) with high accuracy
+(90.37%) and a weighted F1 score of 0.9044.
+By incorporating both buildings specific features and derived metrics such as
+intensity ratios and floor height estimations, the model effectively captures
+structural vulnerability.
+The user friendly GUI enables real time predictions, bridging the gap between
+models and practical disaster management applications.
+This approach can significantly aid engineers, urban planners, and emergency
+responders in prioritizing interventions, ultimately contributing to safer, more
+resilient communities.
+References
+
+
+[1] “Nepal 2015: Building Damage & Seismic Intensity,” Kaggle Dataset, Sirorororo,
+“Nepal‑Earthquake‑Ward‑Level‑Intensities‑and‑Impact”, 2019. [Online]. Available:
+https://www.kaggle.com/datasets/sirorororo/nepal-earthquake-ward-level-intensities-and-
+impact.
+
+
+[2] S. Sirorororo, “Earthquake Damage Grade Classification,” Kaggle Notebook, 2024.
+[Online]. Available: https://www.kaggle.com/code/sirorororo/earthquake-damage-grade-
+classification.
+

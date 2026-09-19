@@ -1,0 +1,62 @@
+{
+  "app.py": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.959084,
+    "ast_hash": "2271660848ea2cfca790924c252f84b1",
+    "semantic_hash": "2271660848ea2cfca790924c252f84b1"
+  },
+  "model_artifacts/metrics.json": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.9590878,
+    "ast_hash": "9c25f8727c9b7a68ccf7209441473bba",
+    "semantic_hash": "9c25f8727c9b7a68ccf7209441473bba"
+  },
+  "predict.py": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.9590902,
+    "ast_hash": "14c9cc8d6f5020ca266815e8616c8e51",
+    "semantic_hash": "14c9cc8d6f5020ca266815e8616c8e51"
+  },
+  "train.py": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.9590914,
+    "ast_hash": "88f56c8d7e1a2ec136c6c21a116eaa5d",
+    "semantic_hash": "88f56c8d7e1a2ec136c6c21a116eaa5d"
+  },
+  "README.md": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.9590926,
+    "ast_hash": "024bb83046e452842b983d6ab2c3ac5a",
+    "semantic_hash": "024bb83046e452842b983d6ab2c3ac5a"
+  },
+  "model_artifacts/lgbm_model.txt": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.959094,
+    "ast_hash": "5b6bb3b47a12e8b0fc4e6883287d77e4",
+    "semantic_hash": "5b6bb3b47a12e8b0fc4e6883287d77e4"
+  },
+  "requirements.txt": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.9590952,
+    "ast_hash": "da6ddf94c9ee269e51adac7303ecba2a",
+    "semantic_hash": "da6ddf94c9ee269e51adac7303ecba2a"
+  },
+  "Earthquake Damage Prediction Using Artificial Intelligence Model.pdf": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.9591053,
+    "ast_hash": "bc15cc4def6a6ebc33428a6212606ff3",
+    "semantic_hash": "bc15cc4def6a6ebc33428a6212606ff3"
+  },
+  "model_artifacts/confusion_matrix.png": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.9591074,
+    "ast_hash": "805d185327b5ccc4f8a6368b145342b4",
+    "semantic_hash": "805d185327b5ccc4f8a6368b145342b4"
+  },
+  "model_artifacts/feature_importance.png": {
+    "mtime": 1787266598.0,
+    "seen": 1789810762.9591084,
+    "ast_hash": "4bc91c8dc65ee29960592db366d690dc",
+    "semantic_hash": "4bc91c8dc65ee29960592db366d690dc"
+  }
+}
