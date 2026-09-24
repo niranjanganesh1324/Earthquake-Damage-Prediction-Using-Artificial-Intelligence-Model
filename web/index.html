@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SeismoGrading - AI Earthquake Damage Assessment</title>
+  <meta name="description" content="LightGBM damage-grade assessment for buildings in the 2015 Nepal earthquake dataset. Pick a ward on a real map or enter structural parameters." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%23fca311' d='M128 24l80 104-80 104-80-104z'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="SeismoGrading home">
+      <img src="assets/icons/diamond-fill.svg" alt="" width="22" height="22" />
+      <span>Seismo<b>Grading</b></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#map-section">Seismic Map</a>
+      <a href="#workspace">Assessment</a>
+      <a href="#model">Model Report</a>
+      <a href="#method">Method</a>
+    </nav>
+    <a class="btn btn-accent nav-cta" href="#workspace">Run assessment</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Nepal 2015 seismic dataset</p>
+      <h1>Grade building damage before the shaking stops.</h1>
+      <p class="sub">
+        A LightGBM classifier trained on 762,000 buildings rates structural
+        vulnerability from Grade 1 (intact) to Grade 5 (collapse), from
+        materials, geometry and seismic intensity.
+      </p>
+      <div class="hero-ctas">
+        <a class="btn btn-accent" href="#workspace">Run assessment</a>
+        <a class="btn btn-ghost" href="#model">View model report</a>
+      </div>
+    </div>
+    <div class="hero-side" id="hero-metrics" aria-label="Model statistics">
+      <div class="hm-skel" role="status" aria-label="Loading model statistics">
+        <div class="sk-line w40"></div>
+        <div class="sk-line w80"></div>
+        <div class="sk-line w80"></div>
+        <div class="sk-line w60"></div>
+        <div class="sk-line w80"></div>
+        <div class="sk-line w80"></div>
+        <div class="sk-line w60"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MAP ============ -->
+  <section class="section" id="map-section">
+    <div class="section-head">
+      <h2>Every assessed building, on one seismic map</h2>
+      <p>
+        947 wards across 11 districts of the Nepal survey, drawn from the real
+        dataset. Color is predicted seismic intensity. Click a marker to load
+        that ward into the workspace below.
+      </p>
+    </div>
+    <div class="map-shell">
+      <svg id="quake-map" viewBox="0 0 960 560" role="application"
+           aria-label="Interactive seismic intensity map of 947 surveyed wards in Nepal"></svg>
+      <div class="map-loading" id="map-loading" role="status" aria-label="Loading ward map">
+        <div class="sk-line w40 center"></div>
+        <div class="sk-line w80 center"></div>
+        <div class="sk-line w60 center"></div>
+      </div>
+      <div class="map-tooltip" id="map-tip" role="tooltip" hidden></div>
+      <div class="map-legend" aria-label="Map legend">
+        <div class="lg-row"><span class="lg-dot" style="background:var(--g1)"></span>Intensity 5.0 to 6.0</div>
+        <div class="lg-row"><span class="lg-dot" style="background:var(--g2)"></span>6.0 to 6.7</div>
+        <div class="lg-row"><span class="lg-dot" style="background:var(--g3)"></span>6.7 to 7.3</div>
+        <div class="lg-row"><span class="lg-dot" style="background:var(--g4)"></span>7.3 to 8.0</div>
+        <div class="lg-row"><span class="lg-dot" style="background:var(--g5)"></span>8.0 and above</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WORKSPACE ============ -->
+  <section class="section" id="workspace">
+    <div class="section-head">
+      <h2>Assessment workspace</h2>
+      <p>
+        Load a ward from the map for automatic geography, or enter building
+        parameters by hand. All 35 model features are covered.
+      </p>
+    </div>
+
+    <div class="presets">
+      <span class="presets-label">Scenarios</span>
+      <button type="button" class="chip" data-preset="fragile_rubble">Fragile Mud-Stone</button>
+      <button type="button" class="chip" data-preset="heavy_masonry">Unreinforced Masonry</button>
+      <button type="button" class="chip" data-preset="urban_infill">Urban RC Infill</button>
+      <button type="button" class="chip" data-preset="stone_cement">Cement-Stone Masonry</button>
+      <button type="button" class="chip" data-preset="engineered_rc">Engineered RC Frame</button>
+      <button type="button" class="chip" data-preset="vernacular_timber">Lowland Bamboo-Timber</button>
+      <button type="button" class="chip" id="chip-reset">Reset</button>
+    </div>
+
+    <div class="workspace">
+      <!-- LEFT: form -->
+      <form class="panel" id="assess-form" novalidate>
+        <fieldset>
+          <legend>
+            <img class="leg-ic" src="assets/icons/map-trifold-fill.svg" alt="" width="15" height="15" />
+            Location
+          </legend>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-ward">Ward <button type="button" class="pick-link" id="pick-ward">pick on map</button></label>
+              <input id="f-ward" name="ward_id" type="number" inputmode="numeric" step="1" placeholder="e.g. 120101" value="120101" required />
+              <p class="help" id="ward-help">6-digit ward code. Use the link above or the map.</p>
+            </div>
+            <div class="field">
+              <label for="f-int">Seismic intensity</label>
+              <div class="range-row">
+                <input id="f-int" name="pred_intensity" type="range" min="3" max="10" step="0.1" value="7.5" />
+                <output id="o-int" for="f-int">7.5</output>
+              </div>
+              <p class="help">USGS shake intensity at the ward site.</p>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-land">Land surface condition</label>
+              <div class="select" data-for="f-land">
+                <select id="f-land" name="land_surface_condition" required>
+                  <option value="Flat" selected>Flat</option>
+                  <option value="Moderate slope">Moderate slope</option>
+                  <option value="Steep slope">Steep slope</option>
+                </select>
+                <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-position">Building position</label>
+              <div class="select" data-for="f-position">
+                <select id="f-position" name="position" required>
+                  <option value="Attached-1 side">Attached-1 side</option>
+                  <option value="Attached-2 side">Attached-2 side</option>
+                  <option value="Attached-3 side">Attached-3 side</option>
+                  <option value="Not attached" selected>Not attached</option>
+                </select>
+                <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-plan">Plan configuration</label>
+            <div class="select" data-for="f-plan">
+              <select id="f-plan" name="plan_configuration" required>
+                <option value="Building with Central Courtyard">Building with Central Courtyard</option>
+                <option value="E-shape">E-shape</option>
+                <option value="H-shape">H-shape</option>
+                <option value="L-shape">L-shape</option>
+                <option value="Multi-projected">Multi-projected</option>
+                <option value="Others">Others</option>
+                <option value="Rectangular" selected>Rectangular</option>
+                <option value="Square">Square</option>
+                <option value="T-shape">T-shape</option>
+                <option value="U-shape">U-shape</option>
+              </select>
+              <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>
+            <img class="leg-ic" src="assets/icons/buildings.svg" alt="" width="15" height="15" />
+            Geometry
+          </legend>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-fl-pre">Floors before earthquake</label>
+              <div class="range-row">
+                <input id="f-fl-pre" name="count_floors_pre_eq" type="range" min="1" max="9" step="1" value="2" />
+                <output id="o-fl-pre" for="f-fl-pre">2</output>
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-fl-post">Floors after earthquake</label>
+              <div class="range-row">
+                <input id="f-fl-post" name="count_floors_post_eq" type="range" min="0" max="9" step="1" value="2" />
+                <output id="o-fl-post" for="f-fl-post">2</output>
+              </div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-h-pre">Height before (ft)</label>
+              <div class="range-row">
+                <input id="f-h-pre" name="height_ft_pre_eq" type="range" min="5" max="100" step="1" value="18" />
+                <output id="o-h-pre" for="f-h-pre">18</output>
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-h-post">Height after (ft)</label>
+              <div class="range-row">
+                <input id="f-h-post" name="height_ft_post_eq" type="range" min="0" max="100" step="1" value="18" />
+                <output id="o-h-post" for="f-h-post">18</output>
+              </div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-age">Building age (years)</label>
+              <div class="range-row">
+                <input id="f-age" name="age_building" type="range" min="0" max="150" step="1" value="15" />
+                <output id="o-age" for="f-age">15</output>
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-plinth">Plinth area (sq ft)</label>
+              <div class="range-row">
+                <input id="f-plinth" name="plinth_area_sq_ft" type="range" min="50" max="2000" step="10" value="450" />
+                <output id="o-plinth" for="f-plinth">450</output>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>
+            <img class="leg-ic" src="assets/icons/waves.svg" alt="" width="15" height="15" />
+            Structural system
+          </legend>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-foundation">Foundation type</label>
+              <div class="select" data-for="f-foundation">
+                <select id="f-foundation" name="foundation_type" required>
+                  <option value="Bamboo/Timber">Bamboo/Timber</option>
+                  <option value="Cement-Stone/Brick">Cement-Stone/Brick</option>
+                  <option value="Mud mortar-Stone/Brick" selected>Mud mortar-Stone/Brick</option>
+                  <option value="Other">Other</option>
+                  <option value="RC">RC</option>
+                </select>
+                <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-roof">Roof type</label>
+              <div class="select" data-for="f-roof">
+                <select id="f-roof" name="roof_type" required>
+                  <option value="Bamboo/Timber-Heavy roof">Bamboo/Timber-Heavy roof</option>
+                  <option value="Bamboo/Timber-Light roof" selected>Bamboo/Timber-Light roof</option>
+                  <option value="RCC/RB/RBC">RCC/RB/RBC</option>
+                </select>
+                <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+              </div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-gfloor">Ground floor type</label>
+              <div class="select" data-for="f-gfloor">
+                <select id="f-gfloor" name="ground_floor_type" required>
+                  <option value="Brick/Stone">Brick/Stone</option>
+                  <option value="Mud" selected>Mud</option>
+                  <option value="Other">Other</option>
+                  <option value="RC">RC</option>
+                  <option value="Timber">Timber</option>
+                </select>
+                <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-ofloor">Other floor type</label>
+              <div class="select" data-for="f-ofloor">
+                <select id="f-ofloor" name="other_floor_type" required>
+                  <option value="Not applicable">Not applicable</option>
+                  <option value="RCC/RB/RBC">RCC/RB/RBC</option>
+                  <option value="TImber/Bamboo-Mud" selected>TImber/Bamboo-Mud</option>
+                  <option value="Timber-Planck">Timber-Planck</option>
+                </select>
+                <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+              </div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-condition">Post-earthquake condition</label>
+              <div class="select" data-for="f-condition">
+                <select id="f-condition" name="condition_post_eq" required>
+                  <option value="Covered by landslide">Covered by landslide</option>
+                  <option value="Damaged-Not used" selected>Damaged-Not used</option>
+                  <option value="Damaged-Repaired and used">Damaged-Repaired and used</option>
+                  <option value="Damaged-Rubble Clear-New building built">Damaged-Rubble Clear-New building built</option>
+                  <option value="Damaged-Rubble clear">Damaged-Rubble clear</option>
+                  <option value="Damaged-Rubble unclear">Damaged-Rubble unclear</option>
+                  <option value="Damaged-Used in risk">Damaged-Used in risk</option>
+                  <option value="Not damaged">Not damaged</option>
+                </select>
+                <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-solution">Proposed technical solution</label>
+              <div class="select" data-for="f-solution">
+                <select id="f-solution" name="technical_solution_proposed" required>
+                  <option value="Major repair">Major repair</option>
+                  <option value="Minor repair">Minor repair</option>
+                  <option value="No need">No need</option>
+                  <option value="Reconstruction" selected>Reconstruction</option>
+                </select>
+                <img class="caret" src="assets/icons/caret-down-fill.svg" alt="" width="14" height="14" />
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>
+            <img class="leg-ic" src="assets/icons/sliders-horizontal.svg" alt="" width="15" height="15" />
+            Superstructure materials
+          </legend>
+          <p class="help fieldset-note">Select every material present in the walls or frame.</p>
+          <div class="checks" id="material-checks">
+            <label class="check"><input type="checkbox" id="m-mms" name="has_superstructure_mud_mortar_stone" checked /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Mud mortar stone</label>
+            <label class="check"><input type="checkbox" id="m-adobe" name="has_superstructure_adobe_mud" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Adobe mud</label>
+            <label class="check"><input type="checkbox" id="m-stonef" name="has_superstructure_stone_flag" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Stone flag</label>
+            <label class="check"><input type="checkbox" id="m-cms" name="has_superstructure_cement_mortar_stone" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Cement mortar stone</label>
+            <label class="check"><input type="checkbox" id="m-mmb" name="has_superstructure_mud_mortar_brick" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Mud mortar brick</label>
+            <label class="check"><input type="checkbox" id="m-cmb" name="has_superstructure_cement_mortar_brick" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Cement mortar brick</label>
+            <label class="check"><input type="checkbox" id="m-timber" name="has_superstructure_timber" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Timber frame</label>
+            <label class="check"><input type="checkbox" id="m-bamboo" name="has_superstructure_bamboo" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Bamboo</label>
+            <label class="check"><input type="checkbox" id="m-rcne" name="has_superstructure_rc_non_engineered" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>RC non-engineered</label>
+            <label class="check"><input type="checkbox" id="m-rce" name="has_superstructure_rc_engineered" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>RC engineered</label>
+            <label class="check"><input type="checkbox" id="m-other" name="has_superstructure_other" /><span class="box" aria-hidden="true"><img src="assets/icons/check-fill.svg" alt="" width="11" height="11" /></span>Other</label>
+          </div>
+        </fieldset>
+
+        <div class="form-footer">
+          <button type="submit" class="btn btn-accent btn-lg" id="btn-run">Run assessment</button>
+          <p class="form-status" id="form-status" role="status"></p>
+        </div>
+      </form>
+
+      <!-- RIGHT: results -->
+      <aside class="results" id="results" aria-live="polite">
+        <div class="results-empty">
+          <img src="assets/icons/crosshair-fill.svg" alt="" width="36" height="36" />
+          <h3>No assessment yet</h3>
+          <p>Load a ward from the map or fill in the building parameters, then run the assessment.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ MODEL REPORT ============ -->
+  <section class="section" id="model">
+    <div class="section-head">
+      <h2>Model report</h2>
+      <p>
+        Trained once with <code>python train.py</code>, evaluated on a held-out
+        20 percent stratified split of 152,419 buildings. Artifacts are read by
+        the app at startup.
+      </p>
+    </div>
+    <div class="model-grid">
+      <figure class="model-fig">
+        <img src="assets/confusion_matrix.png" alt="Confusion matrix heatmap of predicted versus actual damage grades on the test split" loading="lazy" />
+        <figcaption>Confusion matrix on the 152,419-building test split.</figcaption>
+      </figure>
+      <figure class="model-fig">
+        <img src="assets/feature_importance.png" alt="Bar chart of the fifteen most important features by gain" loading="lazy" />
+        <figcaption>Top 15 features by gain importance.</figcaption>
+      </figure>
+    </div>
+    <div class="spec-tiles" id="spec-tiles"></div>
+  </section>
+
+  <!-- ============ METHOD ============ -->
+  <section class="section" id="method">
+    <div class="section-head">
+      <h2>How an assessment works</h2>
+      <p>Four steps, all local. No external services, no data leaves the machine.</p>
+    </div>
+    <div class="method-grid">
+      <article class="method-card">
+        <h3>Load a ward</h3>
+        <p>
+          The ward code resolves to municipality and district through the
+          official mapping, then pulls its seismic intensity from the ward grid.
+        </p>
+      </article>
+      <article class="method-card">
+        <h3>Encode the structure</h3>
+        <p>
+          Materials, floors, geometry and post-event condition are encoded with
+          the exact label mappings saved during training.
+        </p>
+      </article>
+      <article class="method-card">
+        <h3>Classify with LightGBM</h3>
+        <p>
+          A gradient-boosted ensemble of 500 rounds per class scores all five
+          damage grades and returns a full probability distribution.
+        </p>
+      </article>
+      <article class="method-card">
+        <h3>Read the grade</h3>
+        <p>
+          The top grade comes with its confidence, probability spread and the
+          action the grade implies for occupancy and repair.
+        </p>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <a class="brand" href="#top">
+        <img src="assets/icons/diamond-fill.svg" alt="" width="18" height="18" />
+        <span>Seismo<b>Grading</b></span>
+      </a>
+      <p class="footer-note">
+        Damage-grade assessment built on the 2015 Nepal earthquake building
+        survey. Research and planning aid, not a certified inspection.
+      </p>
+    </div>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="#map-section">Seismic map</a>
+      <a href="#workspace">Assessment</a>
+      <a href="#model">Model report</a>
+      <a href="#method">Method</a>
+    </nav>
+    <div class="footer-src">
+      <h4>Train it yourself</h4>
+      <pre>python train.py
+python web/server.py</pre>
+      <p class="footer-note">Starts the app on <code>http://127.0.0.1:7860</code></p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>Dataset: Nepal 2015, 762,106 buildings.</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

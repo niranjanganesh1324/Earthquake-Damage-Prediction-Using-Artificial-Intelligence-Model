@@ -15,3 +15,11 @@ csv_building_structure.csv
 env/
 venv/
 ENV/
+
+# Large binaries & unrelated files
+*.appimage
+*.AppImage
+*.webp
+Smart-Operator-Assistant-for-CAT-Machinery*
+Earthquake-Damage-Prediction-Using-Artificial-Intelligence-Model-main/
+graphify-out/cache/last_query_stamp
